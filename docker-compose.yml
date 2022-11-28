@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  jenkins:
+    container_name: jenkins
+    #image: jenkins-dock
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    restart: on-failure
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eth-ci
+    depends_on:
+      gitlab:
+        condition: service_healthy
+  gitlab:
+    container_name: gitlab
+    image: 'gitlab/gitlab-ee'
+    restart: on-failure
+    # hostname: 'gitlab.example.com'
+    # environment:
+    #   GITLAB_OMNIBUS_CONFIG: |
+    #     external_url 'https://gitlab.example.com'
+    #     # Add any other gitlab.rb configuration here, each on its own line
+    ports:
+      - '80:80'
+      - '443:443'
+      - '222:22'
+    volumes:
+      - ${GITLAB_HOME}/config:/etc/gitlab
+      - ${GITLAB_HOME}/logs:/var/log/gitlab
+      - ${GITLAB_HOME}/data:/var/opt/gitlab
+    shm_size: '256m'
+    networks:
+      - eth-ci
+
+networks:
+  eth-ci:
+
+
+volumes:
+  jenkins_home:
+    # external: true
